@@ -7,13 +7,16 @@ const fragments = {
   dev: devFragment,
   dockerdev: dockerFragment,
 };
+const defaultBoolean = z
+  .enum(['true', 'false'])
+  .transform((val) => val === 'true');
 
 export const ormConfigSchema = z.object({
   postgres: z.object({
     // connection URL for postgres database
     connection: z.string(),
     // whether to use SSL for the connection
-    ssl: z.coerce.boolean().default(false),
+    ssl: defaultBoolean,
   }),
 });
 

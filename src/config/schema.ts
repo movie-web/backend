@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+const defaultBoolean = z
+  .enum(['true', 'false'])
+  .transform((val) => val === 'true');
+
 export const configSchema = z.object({
   server: z
     .object({
@@ -11,73 +15,104 @@ export const configSchema = z.object({
 
       // disable cross origin restrictions, allow any site.
       // overwrites the cors option above
-      allowAnySite: z.coerce.boolean().default(false),
+      allowAnySite: defaultBoolean,
 
       // should it trust reverse proxy headers? (for ip gathering)
-      trustProxy: z.coerce.boolean().default(false),
+      trustProxy: defaultBoolean,
 
       // should it trust cloudflare headers? (for ip gathering, cloudflare has priority)
-      trustCloudflare: z.coerce.boolean().default(false),
+      trustCloudflare: defaultBoolean,
 
       // prefix for where the instance is run on. for example set it to /backend if you're hosting it on example.com/backend
       // if this is set, do not apply url rewriting before proxing
       basePath: z.string().default('/'),
     })
-    .default({}),
+    .default({
+      allowAnySite: 'false',
+      trustProxy: 'false',
+      trustCloudflare: 'false',
+      port: 8080,
+      cors: '',
+      basePath: '/',
+    }),
   logging: z
     .object({
       // format of the logs, JSON is recommended for production
       format: z.enum(['json', 'pretty']).default('pretty'),
 
       // show debug logs?
-      debug: z.coerce.boolean().default(false),
+      debug: defaultBoolean,
     })
-    .default({}),
-  postgres: z.object({
-    // connection URL for postgres database
-    connection: z.string(),
+    .default({
+      format: 'pretty',
+      debug: 'false',
+    }),
+  postgres: z
+    .object({
+      // connection URL for postgres database
+      connection: z.string(),
 
-    // run all migrations on boot of the application
-    migrateOnBoot: z.coerce.boolean().default(false),
+      // run all migrations on boot of the application
+      migrateOnBoot: defaultBoolean,
 
-    // try to sync the schema on boot, useful for development
-    // will always keep the database schema in sync with the connected database
-    // it is extremely destructive, do not use it EVER in production
-    syncSchema: z.coerce.boolean().default(false),
+      // try to sync the schema on boot, useful for development
+      // will always keep the database schema in sync with the connected database
+      // it is extremely destructive, do not use it EVER in production
+      syncSchema: defaultBoolean,
 
-    // Enable debug logging for MikroORM - Outputs queries and entity management logs
-    // Do NOT use in production, leaks all sensitive data
-    debugLogging: z.coerce.boolean().default(false),
+      // Enable debug logging for MikroORM - Outputs queries and entity management logs
+      // Do NOT use in production, leaks all sensitive data
+      debugLogging: defaultBoolean,
 
-    // Enable SSL for the postgres connection
-    ssl: z.coerce.boolean().default(false),
-  }),
-  crypto: z.object({
-    // session secret. used for signing session tokens
-    sessionSecret: z.string().min(32),
-  }),
-  meta: z.object({
-    // name and description of this backend
-    // this is displayed to the client when making an account
-    name: z.string().min(1),
-    description: z.string().min(1).optional(),
-  }),
+      // Enable SSL for the postgres connection
+      ssl: defaultBoolean,
+    })
+    .default({
+      connection: '',
+      migrateOnBoot: 'false',
+      syncSchema: 'false',
+      debugLogging: 'false',
+      ssl: 'false',
+    }),
+  crypto: z
+    .object({
+      // session secret. used for signing session tokens
+      sessionSecret: z.string().min(32),
+    })
+    .default({
+      sessionSecret: 'ThisIsADefaultSecretSessionKeyPlaceholder',
+    }),
+  meta: z
+    .object({
+      // name and description of this backend
+      // this is displayed to the client when making an account
+      name: z.string().min(1),
+      description: z.string().min(1).optional(),
+    })
+    .default({
+      name: ' ',
+    }),
   captcha: z
     .object({
       // enabled captchas on register
-      enabled: z.coerce.boolean().default(false),
+      enabled: defaultBoolean,
 
       // captcha secret
       secret: z.string().min(1).optional(),
 
       clientKey: z.string().min(1).optional(),
     })
-    .default({}),
+    .default({
+      enabled: 'false',
+    }),
   ratelimits: z
     .object({
       // enabled captchas on register
-      enabled: z.coerce.boolean().default(false),
+      enabled: defaultBoolean,
       redisUrl: z.string().optional(),
     })
-    .default({}),
+    .default({
+      enabled: 'false',
+      redisUrl: '',
+    }),
 });
